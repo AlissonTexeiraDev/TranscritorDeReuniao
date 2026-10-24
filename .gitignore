@@ -1,0 +1,14 @@
+# Build outputs (qualquer projeto .NET abaixo desta raiz)
+bin/
+obj/
+publish/
+*.user
+.vs/
+
+# Configuração local do Claude Code (contém caminhos da máquina)
+.mcp.json
+
+# Arquivos do sistema / iCloud
+.DS_Store
+Thumbs.db
+*.icloud
