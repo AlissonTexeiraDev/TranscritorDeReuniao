@@ -37,10 +37,14 @@ public sealed class MeetingOptions
     /// <summary>RMS mínimo para considerar fala, 0.0 a 1.0</summary>
     public float VadThreshold { get; init; } = 0.01f;
 
+    /// <summary>Nomes, siglas e termos (separados por vírgula) que o Whisper deve reconhecer, ex.: Jira, deploy, sprint.</summary>
+    public string Vocabulary { get; init; } = "";
+
     /// <summary>Verdadeiro quando a troca exige recarregar o modelo Whisper.</summary>
     public bool RequiresNewTranscriber(MeetingOptions other) =>
         !string.Equals(ModelName, other.ModelName, StringComparison.OrdinalIgnoreCase) ||
         !string.Equals(Language, other.Language, StringComparison.OrdinalIgnoreCase) ||
         Threads != other.Threads ||
-        !string.Equals(ModelsDir, other.ModelsDir, StringComparison.OrdinalIgnoreCase);
+        !string.Equals(ModelsDir, other.ModelsDir, StringComparison.OrdinalIgnoreCase) ||
+        !string.Equals(Vocabulary, other.Vocabulary, StringComparison.Ordinal);
 }

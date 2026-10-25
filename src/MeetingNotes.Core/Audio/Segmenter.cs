@@ -16,7 +16,7 @@ public sealed class Segmenter
     private readonly float _threshold;
 
     private readonly int _preRollFrames = 300 / FrameMs;     // 300 ms antes da fala
-    private readonly int _hangoverFrames = 700 / FrameMs;    // 700 ms de silêncio fecha o segmento
+    private readonly int _hangoverFrames = 900 / FrameMs;    // 900 ms de silêncio fecha o segmento (pausas curtas não fragmentam a frase)
     private readonly int _maxFrames = 20_000 / FrameMs;      // 20 s no máximo por segmento
     private readonly int _minSpeechFrames = 300 / FrameMs;   // menos de 300 ms de fala é descartado
 

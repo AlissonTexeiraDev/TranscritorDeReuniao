@@ -176,6 +176,13 @@ internal sealed class MainForm : Form
             _btnStart.Enabled = false;
             _btnStop.Enabled = false;
         }
+        else if (_ctx.Service.IsPreloading)
+        {
+            _status.ForeColor = Color.FromArgb(180, 120, 0);
+            _status.Text = $"● Preparando o modelo de transcrição ({_ctx.Settings.ModelName})... Pode iniciar; a gravação começa assim que ele estiver pronto.";
+            _btnStart.Enabled = true;
+            _btnStop.Enabled = false;
+        }
         else
         {
             _status.ForeColor = Color.FromArgb(90, 90, 90);

@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using Microsoft.Extensions.Logging;
 using Whisper.net;
 using Whisper.net.Ggml;
+using Whisper.net.LibraryLoader;
 using Whisper.net.Logger;
 
 namespace MeetingNotes.Transcription;
@@ -21,9 +23,12 @@ public sealed class WhisperTranscriber : IDisposable
     public string ModelPath { get; }
     public string Language { get; }
 
+    /// <summary>Runtime nativo escolhido pelo Whisper.net (Cuda, Vulkan, Cpu...).</summary>
+    public string Runtime { get; }
+
     private static IDisposable? _nativeLogHook;
 
-    public WhisperTranscriber(string modelPath, string language, int threads, ILogger log)
+    public WhisperTranscriber(string modelPath, string language, int threads, string vocabulary, ILogger log)
     {
         ModelPath = modelPath;
         Language = language;
@@ -48,11 +53,17 @@ public sealed class WhisperTranscriber : IDisposable
             .WithThreads(threads)
             .WithNoContext();
 
-        if (language.StartsWith("pt", StringComparison.OrdinalIgnoreCase))
-            builder = builder.WithPrompt("Transcrição de uma reunião de trabalho em português do Brasil, com pontuação.");
+        // O prompt inicial orienta idioma, pontuação e vocabulário (nomes próprios e termos técnicos).
+        var prompt = language.StartsWith("pt", StringComparison.OrdinalIgnoreCase)
+            ? "Transcrição de uma reunião de trabalho em português do Brasil, com pontuação."
+            : "Transcript of a work meeting, with punctuation.";
+        var vocab = vocabulary.Trim();
+        if (vocab.Length > 0) prompt += $" {vocab}.";
+        builder = builder.WithPrompt(prompt);
 
         _processor = builder.Build();
-        _log.LogInformation("Whisper carregado: {Model} (idioma={Lang}, threads={Threads})", Path.GetFileName(modelPath), language, threads);
+        Runtime = RuntimeOptions.LoadedLibrary?.ToString() ?? "desconhecido";
+        _log.LogInformation("Whisper carregado: {Model} (idioma={Lang}, threads={Threads}, runtime={Runtime})", Path.GetFileName(modelPath), language, threads, Runtime);
     }
 
     public static GgmlType ParseModel(string name) => Normalize(name) switch
@@ -88,6 +99,26 @@ public sealed class WhisperTranscriber : IDisposable
         File.Move(tmp, path, overwrite: true);
         log.LogInformation("Modelo baixado: {Size} MB", new FileInfo(path).Length / 1_000_000);
         return path;
+    }
+
+    /// <summary>
+    /// Roda uma inferência curta para aquecer o runtime. Na GPU (Vulkan/CUDA) a primeira chamada compila
+    /// os shaders e pode levar mais de 10 s; feito aqui, a primeira fala da reunião não paga esse custo.
+    /// </summary>
+    public async Task WarmUpAsync(CancellationToken ct)
+    {
+        var sw = Stopwatch.StartNew();
+        var silence = new float[SampleRate * 3 / 2];
+        await _gate.WaitAsync(ct);
+        try
+        {
+            await foreach (var _ in _processor.ProcessAsync(silence, ct)) { }
+        }
+        finally
+        {
+            _gate.Release();
+        }
+        _log.LogInformation("Whisper aquecido em {Ms} ms (runtime={Runtime})", sw.ElapsedMilliseconds, Runtime);
     }
 
     public async Task<IReadOnlyList<TranscribedSegment>> TranscribeAsync(float[] samples, CancellationToken ct)

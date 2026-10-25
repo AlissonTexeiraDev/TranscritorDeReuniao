@@ -50,6 +50,7 @@ internal sealed class TrayContext : ApplicationContext
         Service = new MeetingService(Settings.ToMeetingOptions(), _loggerFactory);
         Service.MeetingStarted += _ => Post(Refresh);
         Service.MeetingStopped += _ => Post(Refresh);
+        Preload();
 
         _controller = new LocalMeetingController(Service, "cliente");
         _pipe = new PipeServer(_controller, _loggerFactory.CreateLogger<PipeServer>());
@@ -98,6 +99,17 @@ internal sealed class TrayContext : ApplicationContext
     {
         if (Exiting) return;
         if (_ui.IsHandleCreated) _ui.BeginInvoke(action);
+    }
+
+    /// <summary>Carrega e aquece o modelo em segundo plano, para a gravação (manual ou detectada) começar na hora.</summary>
+    private void Preload()
+    {
+        _ = Task.Run(async () =>
+        {
+            Post(Refresh);
+            await Service.PreloadAsync(CancellationToken.None);
+            Post(Refresh);
+        });
     }
 
     public bool IsRecording => Service.IsRecording;
@@ -177,6 +189,7 @@ internal sealed class TrayContext : ApplicationContext
         {
             Settings.Save();
             Service.UpdateOptions(Settings.ToMeetingOptions());
+            Preload();
         }
         catch (Exception ex)
         {

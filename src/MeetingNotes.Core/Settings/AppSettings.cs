@@ -32,6 +32,9 @@ public sealed class AppSettings
     public int Threads { get; set; } = Math.Clamp(Environment.ProcessorCount / 2, 2, 8);
     public float VadThreshold { get; set; } = 0.01f;
 
+    /// <summary>Nomes, siglas e termos que o Whisper deve reconhecer (vão no prompt inicial do modelo).</summary>
+    public string Vocabulary { get; set; } = "Jira, Confluence, Teams, deploy, sprint, backlog, pull request, release, homologação, produção";
+
     /// <summary>Iniciar a gravação sozinho quando um dos processos monitorados usar o microfone.</summary>
     public bool AutoDetect { get; set; } = true;
 
@@ -96,6 +99,7 @@ public sealed class AppSettings
         if (E("MEETING_NOTES_MY_NAME") is { } me) MyName = me;
         if (E("MEETING_NOTES_OTHERS_NAME") is { } others) OthersName = others;
         if (int.TryParse(E("MEETING_NOTES_THREADS"), out var t) && t > 0) Threads = t;
+        if (E("MEETING_NOTES_VOCABULARY") is { } vocab) Vocabulary = vocab;
         if (float.TryParse(E("MEETING_NOTES_VAD_THRESHOLD"), System.Globalization.NumberStyles.Float,
                 System.Globalization.CultureInfo.InvariantCulture, out var v) && v > 0) VadThreshold = v;
     }
@@ -112,6 +116,7 @@ public sealed class AppSettings
         MyName = MyName,
         OthersName = OthersName,
         Threads = Threads,
-        VadThreshold = VadThreshold
+        VadThreshold = VadThreshold,
+        Vocabulary = Vocabulary
     };
 }

@@ -68,6 +68,45 @@ public sealed class MeetingService : IDisposable
     }
 
     private bool _transcriberStale;
+    private volatile bool _preloading;
+
+    /// <summary>Verdadeiro enquanto o modelo está sendo baixado, carregado ou aquecido em segundo plano.</summary>
+    public bool IsPreloading => _preloading;
+
+    /// <summary>
+    /// Baixa o modelo, carrega o Whisper e aquece o runtime, para a gravação começar sem atraso.
+    /// Não faz nada se já há um transcritor pronto ou uma reunião em andamento.
+    /// </summary>
+    public async Task PreloadAsync(CancellationToken ct)
+    {
+        await _lock.WaitAsync(ct);
+        try
+        {
+            if (_current is not null) return;
+            if (_transcriberStale && _transcriber is not null)
+            {
+                _transcriber.Dispose();
+                _transcriber = null;
+                _transcriberStale = false;
+            }
+            if (_transcriber is not null) return;
+
+            _preloading = true;
+            var modelPath = await WhisperTranscriber.EnsureModelAsync(_opt.ModelsDir, _opt.ModelName, _log, ct);
+            var transcriber = new WhisperTranscriber(modelPath, _opt.Language, _opt.Threads, _opt.Vocabulary, _loggerFactory.CreateLogger<WhisperTranscriber>());
+            await transcriber.WarmUpAsync(ct);
+            _transcriber = transcriber;
+        }
+        catch (Exception ex)
+        {
+            _log.LogWarning(ex, "Falha ao pré-carregar o modelo; ele será carregado na primeira gravação");
+        }
+        finally
+        {
+            _preloading = false;
+            _lock.Release();
+        }
+    }
 
     public async Task<MeetingSession> StartAsync(string? title, CancellationToken ct)
     {
@@ -86,8 +125,12 @@ public sealed class MeetingService : IDisposable
                 _transcriberStale = false;
             }
 
-            var modelPath = await WhisperTranscriber.EnsureModelAsync(_opt.ModelsDir, _opt.ModelName, _log, ct);
-            _transcriber ??= new WhisperTranscriber(modelPath, _opt.Language, _opt.Threads, _loggerFactory.CreateLogger<WhisperTranscriber>());
+            if (_transcriber is null)
+            {
+                var modelPath = await WhisperTranscriber.EnsureModelAsync(_opt.ModelsDir, _opt.ModelName, _log, ct);
+                _transcriber = new WhisperTranscriber(modelPath, _opt.Language, _opt.Threads, _opt.Vocabulary, _loggerFactory.CreateLogger<WhisperTranscriber>());
+                await _transcriber.WarmUpAsync(ct);
+            }
 
             var render = AudioDevices.Resolve(DataFlow.Render, _opt.SystemDevice)
                 ?? throw new InvalidOperationException("Nenhum dispositivo de saída de áudio encontrado para capturar os participantes (loopback).");

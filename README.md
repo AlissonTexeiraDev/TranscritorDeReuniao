@@ -119,6 +119,7 @@ ambiente `MEETING_NOTES_*` têm precedência, o que permite configurar o servido
 | `MEETING_NOTES_MY_NAME` / `MEETING_NOTES_OTHERS_NAME` | `Eu` / `Outros` | Rótulos das falas. |
 | `MEETING_NOTES_THREADS` | metade dos núcleos (2 a 8) | Threads do whisper.cpp. |
 | `MEETING_NOTES_VAD_THRESHOLD` | `0.01` | Energia mínima (RMS) para considerar fala. |
+| `MEETING_NOTES_VOCABULARY` | Jira, deploy, sprint... | Nomes e termos que o Whisper deve reconhecer (vão no prompt inicial). |
 
 ## Desenvolvimento
 
@@ -145,8 +146,12 @@ Observações:
 - Em pastas sincronizadas (iCloud Drive, OneDrive) o `Directory.Build.props` manda `bin`/`obj` para
   `%LOCALAPPDATA%\TranscritorDeReuniao\artifacts`. Ainda assim, repositório Git em pasta sincronizada é
   frágil; prefira clonar em uma pasta comum, como `C:\Git`.
-- GPU NVIDIA: adicione `Whisper.net.Runtime.Cuda` (ou `Cuda12`) aos projetos Client e Mcp; o runtime certo é
-  escolhido sozinho. CPU sem AVX: troque `Whisper.net.Runtime` por `Whisper.net.Runtime.NoAvx`.
+- GPU: os executáveis já incluem `Whisper.net.Runtime.Vulkan`, que usa a GPU (NVIDIA, AMD ou Intel) sem
+  instalar nenhum toolkit; o runtime escolhido aparece no log (`runtime=Vulkan` ou `Cpu`). Com CUDA Toolkit
+  instalado, `Whisper.net.Runtime.Cuda` (ou `Cuda12`) é um pouco mais rápido. CPU sem AVX: troque
+  `Whisper.net.Runtime` por `Whisper.net.Runtime.NoAvx`.
+- Modelos na CPU deste tipo de máquina (8 threads): `small` transcreve 10 s de áudio em ~2 s; `large-turbo`
+  leva ~10 s, ou seja, não acompanha a conversa. Na GPU, `large-turbo` fica em tempo real.
 
 ## Limitações
 

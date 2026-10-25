@@ -19,6 +19,7 @@ internal sealed class SettingsForm : Form
     private readonly TextBox _othersName = new();
     private readonly NumericUpDown _threads = new() { Minimum = 1, Maximum = 64 };
     private readonly NumericUpDown _vad = new() { DecimalPlaces = 3, Increment = 0.005m, Minimum = 0.001m, Maximum = 0.5m };
+    private readonly TextBox _vocabulary = new();
     private readonly TextBox _watched = new();
     private readonly NumericUpDown _autoStop = new() { Minimum = 5, Maximum = 600 };
 
@@ -33,7 +34,7 @@ internal sealed class SettingsForm : Form
         MinimizeBox = false;
         ShowInTaskbar = false;
         Font = new Font("Segoe UI", 9.5f);
-        ClientSize = new Size(640, 470);
+        ClientSize = new Size(640, 530);
 
         var grid = new TableLayoutPanel
         {
@@ -63,6 +64,7 @@ internal sealed class SettingsForm : Form
         Row(grid, "Nome dos outros:", _othersName, "Rótulo das falas vindas da saída de áudio.");
         Row(grid, "Threads do Whisper:", _threads, null);
         Row(grid, "Sensibilidade de voz (RMS):", _vad, "Aumente se gravar ruído; diminua se perder falas baixas. Padrão 0,010.");
+        Row(grid, "Vocabulário (nomes, siglas):", _vocabulary, "Separe por vírgula. Ajuda o Whisper a acertar nomes de pessoas, sistemas e termos técnicos.");
         Row(grid, "Apps que indicam reunião:", _watched, "Nomes de processo separados por vírgula. Detecta quando um deles usa o microfone.");
         Row(grid, "Encerrar após (s) sem áudio:", _autoStop, "Só para gravações iniciadas automaticamente.");
 
@@ -112,6 +114,7 @@ internal sealed class SettingsForm : Form
         _othersName.Text = _settings.OthersName;
         _threads.Value = Math.Clamp(_settings.Threads, (int)_threads.Minimum, (int)_threads.Maximum);
         _vad.Value = Math.Clamp((decimal)_settings.VadThreshold, _vad.Minimum, _vad.Maximum);
+        _vocabulary.Text = _settings.Vocabulary;
         _watched.Text = string.Join(", ", _settings.WatchedProcesses);
         _autoStop.Value = Math.Clamp(_settings.AutoStopAfterSeconds, (int)_autoStop.Minimum, (int)_autoStop.Maximum);
     }
@@ -134,6 +137,7 @@ internal sealed class SettingsForm : Form
         _settings.OthersName = _othersName.Text.Trim().Length == 0 ? "Outros" : _othersName.Text.Trim();
         _settings.Threads = (int)_threads.Value;
         _settings.VadThreshold = (float)_vad.Value;
+        _settings.Vocabulary = _vocabulary.Text.Trim();
         _settings.WatchedProcesses = _watched.Text
             .Split([',', ';', '\n'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
             .Select(p => p.EndsWith(".exe", StringComparison.OrdinalIgnoreCase) ? p[..^4] : p)
