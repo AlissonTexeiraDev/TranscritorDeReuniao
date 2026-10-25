@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>MeetingNotes.Mcp</RootNamespace>
+    <AssemblyName>MeetingNotesMcp</AssemblyName>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <Version>0.2.0</Version>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MeetingNotes.Core\MeetingNotes.Core.csproj" />
+    <!-- Garante que as DLLs nativas do whisper.cpp sejam copiadas para a saída deste executável. -->
+    <PackageReference Include="Whisper.net.Runtime" Version="1.9.1" />
+    <!-- Servidor MCP (SDK oficial) + hosting -->
+    <PackageReference Include="ModelContextProtocol" Version="2.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.13" />
+  </ItemGroup>
+
+</Project>

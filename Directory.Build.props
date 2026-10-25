@@ -1,0 +1,14 @@
+<Project>
+
+  <!--
+    Quando o repositório está em uma pasta sincronizada (iCloud Drive, OneDrive), as saídas de build
+    vão para %LOCALAPPDATA%\TranscritorDeReuniao\artifacts. Isso evita sincronizar milhares de arquivos
+    binários e os conflitos de renomeação que o sincronizador cria durante a compilação.
+    Em qualquer outra pasta, o layout é o padrão (bin/ e obj/ dentro de cada projeto).
+  -->
+  <PropertyGroup Condition="$(MSBuildThisFileDirectory.Contains('iCloud')) Or $(MSBuildThisFileDirectory.Contains('OneDrive'))">
+    <UseArtifactsOutput>true</UseArtifactsOutput>
+    <ArtifactsPath>$(LOCALAPPDATA)\TranscritorDeReuniao\artifacts</ArtifactsPath>
+  </PropertyGroup>
+
+</Project>

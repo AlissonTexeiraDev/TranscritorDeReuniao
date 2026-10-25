@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>MeetingNotes.Client</RootNamespace>
+    <AssemblyName>TranscritorDeReuniao</AssemblyName>
+    <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <Version>0.2.0</Version>
+    <Product>Transcritor de Reunião</Product>
+    <Description>Grava e transcreve reuniões (Teams, Meet, Zoom) localmente e expõe a transcrição ao Claude via MCP.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MeetingNotes.Core\MeetingNotes.Core.csproj" />
+    <!-- Garante que as DLLs nativas do whisper.cpp sejam copiadas para a saída deste executável. -->
+    <PackageReference Include="Whisper.net.Runtime" Version="1.9.1" />
+    <PackageReference Include="Microsoft.Extensions.Logging" Version="10.0.13" />
+  </ItemGroup>
+
+</Project>

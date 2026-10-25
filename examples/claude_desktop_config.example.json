@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "meeting-notes": {
+      "command": "C:\\Users\\SEU_USUARIO\\AppData\\Local\\Programs\\TranscritorDeReuniao\\MeetingNotesMcp.exe",
+      "args": ["serve"],
+      "env": {
+        "MEETING_NOTES_MODEL": "small",
+        "MEETING_NOTES_LANGUAGE": "pt"
+      }
+    }
+  }
+}
